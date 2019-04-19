@@ -3,6 +3,23 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/esp32-idf" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/esp8266-open-rtos" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/esp8266-open-rtos/bootloader/rboot" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/esp8266-open-rtos/extras/bearssl/BearSSL" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/esp8266-open-rtos/extras/crc_generic/crc_lib" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/esp8266-open-rtos/extras/http-parser/http-parser" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/esp8266-open-rtos/extras/jsmn/jsmn" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/esp8266-open-rtos/extras/libesphttpd/libesphttpd" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/esp8266-open-rtos/extras/libesphttpd/libesphttpd/lib/heatshrink" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/esp8266-open-rtos/extras/mbedtls/mbedtls" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/esp8266-open-rtos/extras/multipwm" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/esp8266-open-rtos/extras/spiffs/spiffs" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/esp8266-open-rtos/lvgl/lv_drivers" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/esp8266-open-rtos/lvgl/lv_examples" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/esp8266-open-rtos/lvgl/lvgl" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/esp8266-open-rtos/lwip/lwip" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/esp8266-open-rtos/tests/fs-test" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/esp8266-open-rtos/tests/unity" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/freertos" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/lwiot-core" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/lwip" vcs="Git" />
