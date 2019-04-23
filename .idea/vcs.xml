@@ -2,7 +2,8 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/external/esp32-idf" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/esp32-idf" vcs="" />
+    <mapping directory="$PROJECT_DIR$/external/esp8266-idf" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/esp8266-open-rtos" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/esp8266-open-rtos/bootloader/rboot" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/esp8266-open-rtos/extras/bearssl/BearSSL" vcs="Git" />

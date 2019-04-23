@@ -74,10 +74,10 @@ SET(PLATFORM_DIRECTORY ${PROJECT_SOURCE_DIR}/source/platform/esp8266)
 
 SET(RTTI False)
 
-set(PORT_C_FLAGS "${CMAKE_C_FLAGS} -Wno-comment -Wno-pointer-sign -fno-builtin -Wno-implicit-function-declaration \
+set(PORT_C_FLAGS "-Wno-comment -Wno-pointer-sign -fno-builtin -Wno-implicit-function-declaration \
     -Wl,-EL,--gc-sections -fno-inline-functions -nostdlib -mlongcalls -mtext-section-literals \
     -ffunction-sections -fdata-sections")
-set(PORT_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -fno-exceptions -Wno-comment -fno-builtin -Wl,-EL,--gc-sections -fno-inline-functions \
+set(PORT_CXX_FLAGS "-fno-rtti -fno-exceptions -Wno-comment -fno-builtin -Wl,-EL,--gc-sections -fno-inline-functions \
     -nostdlib -mlongcalls -mtext-section-literals -ffunction-sections -fdata-sections -Wc++11-compat -fstack-protector")
 
 SET(ESP8266 True)
