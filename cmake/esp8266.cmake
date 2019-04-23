@@ -119,7 +119,7 @@ set(LWIOT_CORE_INCLUDE_DIRECTORIES
 
 if(RTTI)
 SET(PORT_CXX_FLAGS 
-	"-ffunction-sections -fdata-sections -fstrict-volatile-bitfields -mlongcalls -nostdlib \
+	"-ffunction-sections -fdata-sections -fstrict-volatile-bitfields -mlongcalls -nostdlib -fstack-protector \
 	-Werror=all	-Wno-error=unused-function -Wno-error=unused-but-set-variable -Wno-error=unused-variable \
 	-Wno-error=deprecated-declarations -Wextra -Wno-unused-parameter -Wno-sign-compare \
 	-DWITH_POSIX -D__ESP_FILE__=__FILE__"
@@ -127,7 +127,7 @@ SET(PORT_CXX_FLAGS
 
 else()
 SET(PORT_CXX_FLAGS 
-	"-fno-rtti -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -mlongcalls -nostdlib \
+	"-fno-rtti -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -mlongcalls -nostdlib -fstack-protector \
 	-Werror=all	-Wno-error=unused-function -Wno-error=unused-but-set-variable -Wno-error=unused-variable \
 	-Wno-error=deprecated-declarations -Wextra -Wno-unused-parameter -Wno-sign-compare -fno-exceptions \
 	-DWITH_POSIX -D__ESP_FILE__=__FILE__"
@@ -135,7 +135,7 @@ SET(PORT_CXX_FLAGS
 endif()
 
 SET(PORT_C_FLAGS 
-	"-ffunction-sections -fdata-sections -fstrict-volatile-bitfields -mlongcalls -nostdlib \
+	"-ffunction-sections -fdata-sections -fstrict-volatile-bitfields -mlongcalls -nostdlib -fstack-protector \
 	-Werror=all	-Wno-error=unused-function -Wno-error=unused-but-set-variable -Wno-error=unused-variable \
 	-Wno-error=deprecated-declarations -Wextra -Wno-unused-parameter -Wno-sign-compare \
 	-DWITH_POSIX -D__ESP_FILE__=__FILE__"
