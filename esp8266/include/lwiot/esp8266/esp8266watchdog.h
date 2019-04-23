@@ -28,15 +28,11 @@ namespace lwiot { namespace esp8266
 		Watchdog(const Watchdog&) = delete;
 		const Watchdog& operator =(const Watchdog&) = delete;
 
-		virtual bool enable(uint32_t tmo = 2000) override;
+		virtual bool enable(uint32_t tmo) override;
 		virtual bool disable() override;
 		virtual void reset() override;
 
 	private:
-		volatile uint32_t count;
-		volatile uint32_t overflow;
-
-		friend void wdt_timer_irq_handler(void *arg);
 		explicit Watchdog();
 	};
 }

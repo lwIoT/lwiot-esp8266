@@ -5,82 +5,81 @@
  * @email  dev@bietje.net
  */
 
-#include <esp8266.h>
+#include <stdlib.h>
 #include <lwiot.h>
+#include <esp_attr.h>
+#include <math.h>
 
-#include <esp/rtc_regs.h>
-#include <esp/gpio.h>
-#include <esp/gpio_regs.h>
-
-#include <espressif/esp8266/eagle_soc.h>
-#include <espressif/esp8266/ets_sys.h>
-#include <espressif/esp_common.h>
-
-#include <lwiot/types.h>
 #include <lwiot/io/gpiochip.h>
-#include <lwiot/esp8266/esp8266gpiochip.h>
 #include <lwiot/log.h>
+#include <lwiot/esp8266/esp8266gpiochip.h>
 
+#include <driver/gpio.h>
+#include <rom/ets_sys.h>
+#include <sys/reent.h>
 
-#define PIN16 16
+#include "esp8266gpio.h"
 
-static irq_handler_t __handlers[PINS] = {0,};
+#ifdef PINS
+#undef PINS
+#endif
 
+#define PINS 16
+
+#ifndef HIGH
+#define HIGH 1
+#define LOW  0
+#endif
+
+static irq_handler_t gpio_isr_handlers[PINS] = {nullptr};
+static gpio_config_t configs[PINS];
+
+static void IRAM_ATTR gpio_external_isr(void *arg)
+{
+	int bits;
+	auto config = static_cast<gpio_config_t*>(arg);
+
+	bits = static_cast<int>(config->pin_bit_mask);
+	auto pin = int(log2(bits & -bits) + 1);
+	irq_handler_t handler = gpio_isr_handlers[pin];
+
+	handler();
+}
 
 namespace lwiot { namespace esp8266
 {
-	static void IRAM gpio_irq_handler(uint8_t num)
-	{
-		printf("In IRQ");
-		if(num > PINS)
-			return;
-
-		auto handler = __handlers[num];
-		if(handler == nullptr)
-			return;
-
-		handler();
-	}
 	GpioChip::GpioChip() : lwiot::GpioChip(PINS)
 	{ }
 
 	void GpioChip::mode(int pin, const PinMode& mode)
 	{
-		if(pin == PIN16) {
-			this->mode16(mode);
-			return;
-		}
-
-		uint8_t _pin = pin;
+		auto _pin = (gpio_num_t)pin;
 
 		switch(mode) {
 		case INPUT_PULLUP:
-			GPIO.ENABLE_OUT_CLEAR = BIT(_pin);
-			iomux_set_gpio_function(_pin, false);
-			this->setPullup(_pin, true);
+			gpio_set_direction(_pin, GPIO_MODE_INPUT);
+			gpio_pullup_en(_pin);
 			break;
 
 		case INPUT_NOPULLUP:
-			GPIO.ENABLE_OUT_CLEAR = BIT(_pin);
-			iomux_set_gpio_function(_pin, false);
-			this->setPullup(_pin, false);
+			gpio_set_direction(_pin, GPIO_MODE_INPUT);
+			gpio_pullup_dis(_pin);
 			break;
 
 		case INPUT:
-			GPIO.ENABLE_OUT_CLEAR = BIT(_pin);
-			iomux_set_gpio_function(_pin, false);
+			gpio_set_direction(_pin, GPIO_MODE_INPUT);
+			gpio_set_pull_mode(_pin, GPIO_FLOATING);
 			break;
 
 		case OUTPUT:
-			GPIO.CONF[_pin] &= ~GPIO_CONF_OPEN_DRAIN;
-			GPIO.ENABLE_OUT_SET = BIT(_pin);
-			iomux_set_gpio_function(_pin, true);
+			gpio_set_direction(_pin, GPIO_MODE_OUTPUT);
+			gpio_pullup_dis(_pin);
+			gpio_pulldown_dis(_pin);
 			break;
 
 		case OUTPUT_OPEN_DRAIN:
-			GPIO.CONF[_pin] |= GPIO_CONF_OPEN_DRAIN;
-			GPIO.ENABLE_OUT_SET = BIT(_pin);
-			iomux_set_gpio_function(_pin, true);
+			gpio_set_direction(_pin, GPIO_MODE_OUTPUT_OD);
+			gpio_set_pull_mode(_pin, GPIO_FLOATING);
 			break;
 
 		default:
@@ -89,29 +88,15 @@ namespace lwiot { namespace esp8266
 		}
 	}
 
-	void IRAM GpioChip::write(int pin, bool value)
+	void IRAM_ATTR GpioChip::write(int pin, bool value)
 	{
-		uint8_t _pin = pin;
-
-		if(_pin == 16) {
-			RTC.GPIO_OUT = (RTC.GPIO_OUT & 0xfffffffe) | (value ? 1 : 0);
-		} else if(value) {
-			GPIO.OUT_SET = BIT(_pin) & GPIO_OUT_PIN_MASK;
-		} else {
-			GPIO.OUT_CLEAR = BIT(_pin) & GPIO_OUT_PIN_MASK;
-		}
+		uint32_t level = value ? HIGH : LOW;
+		gpio_set_level((gpio_num_t)pin, level);
 	}
 
-	bool GpioChip::read(int pin) const
+	bool IRAM_ATTR GpioChip::read(int pin) const
 	{
-		auto rv = 0;
-
-		if(pin == PIN16)
-			rv = RTC.GPIO_IN & 1U;
-		else
-			rv = GPIO.IN & BIT(pin);
-
-		return rv != 0;
+		return gpio_get_level((gpio_num_t)pin) == 1U;
 	}
 
 	void GpioChip::setOpenDrain(int pin)
@@ -120,80 +105,70 @@ namespace lwiot { namespace esp8266
 		this->write(pin, true);
 	}
 
-	void GpioChip::odWrite(int pin, bool value)
+	void IRAM_ATTR GpioChip::odWrite(int pin, bool value)
 	{
-		this->write(pin, value);
-	}
-
-	void GpioChip::setPullup(int pin, bool enable)
-	{
-		uint32_t flags = 0;
-
-		if(enable)
-			flags |= IOMUX_PIN_PULLUP;
-
-		flags |= IOMUX_PIN_PULLUP_SLEEP;
-		iomux_set_pullup_flags(gpio_to_iomux(pin), flags);
-	}
-
-	void GpioChip::mode16(const PinMode& mode)
-	{
-		RTC.GPIO_CFG[3] = (RTC.GPIO_CFG[3] & 0xffffffbc) | 1;
-		RTC.GPIO_CONF = (RTC.GPIO_CONF & 0xfffffffe) | 0;
-
-		switch(mode) {
-		case INPUT_NOPULLUP:
-			RTC.GPIO_ENABLE = (RTC.GPIO_OUT & 0xfffffffe);
-			this->setPullup(16, false);
-			break;
-
-		case INPUT_PULLUP:
-			RTC.GPIO_ENABLE = (RTC.GPIO_OUT & 0xfffffffe);
-			this->setPullup(16, true);
-			break;
-
-		case INPUT:
-			RTC.GPIO_ENABLE = (RTC.GPIO_OUT & 0xfffffffe);
-			break;
-
-		case OUTPUT:
-		case OUTPUT_OPEN_DRAIN:
-			RTC.GPIO_ENABLE = (RTC.GPIO_OUT & 0xfffffffe) | 1;
-			break;
-
-		default:
-			print_dbg("Attempting to set invalid GPIO mode!\n");
-			break;
-		}
+		uint32_t level = value ? HIGH : LOW;
+		gpio_set_level((gpio_num_t)pin, level);
 	}
 
 	void GpioChip::attachIrqHandler(int pin, irq_handler_t handler, IrqEdge edge)
 	{
-		auto _edge = this->mapIrqEdge(edge);
+		static bool interrupt_initialized = false;
+		gpio_config_t *config = &configs[pin];
 
-		if(_edge == GPIO_INTTYPE_NONE || pin >= PINS)
-			return;
+		if(!interrupt_initialized) {
+			gpio_install_isr_service(0);
+			interrupt_initialized = true;
+		}
 
-		this->mode(pin, INPUT);
-		__handlers[pin] = handler;
-		gpio_set_interrupt(pin, _edge, gpio_irq_handler);
+		if(config->intr_type != GPIO_INTR_DISABLE)
+			gpio_isr_handler_remove(static_cast<gpio_num_t>(pin));
+
+		config->intr_type = this->mapIrqEdge(edge);
+		config->mode = GPIO_MODE_INPUT;
+		config->pin_bit_mask = 1UL << pin;
+		config->pull_down_en = GPIO_PULLDOWN_DISABLE;
+		config->pull_up_en = GPIO_PULLUP_DISABLE;
+		gpio_config(config);
+
+		gpio_isr_handlers[pin] = handler;
+		gpio_isr_handler_add(static_cast<gpio_num_t>(pin), gpio_external_isr, config);
 	}
 
-	gpio_inttype_t GpioChip::mapIrqEdge(const IrqEdge& edge) const
+	gpio_int_type_t GpioChip::mapIrqEdge(const lwiot::IrqEdge &edge) const
 	{
 		switch(edge) {
 		case IrqRising:
-			return GPIO_INTTYPE_EDGE_POS;
+			return GPIO_INTR_POSEDGE;
 
 		case IrqFalling:
-			return GPIO_INTTYPE_EDGE_NEG;
+			return GPIO_INTR_NEGEDGE;
 
 		case IrqRisingFalling:
-			return GPIO_INTTYPE_EDGE_ANY;
+			return GPIO_INTR_ANYEDGE;
 
 		default:
-			return GPIO_INTTYPE_NONE;
+		case IrqNone:
+			return GPIO_INTR_DISABLE;
 		}
+	}
+}
+
+extern "C" void pinMode(int pin, int mode)
+{
+	switch(mode) {
+	default:
+	case RAW_INPUT:
+		gpio.mode(pin, lwiot::PinMode::INPUT);
+		break;
+
+	case RAW_OUTPUT:
+		gpio.mode(pin, lwiot::PinMode::OUTPUT);
+		break;
+
+	case RAW_OUTPUT_OPENDRAIN:
+		gpio.mode(pin, lwiot::PinMode::OUTPUT_OPEN_DRAIN);
+		break;
 	}
 }
 }

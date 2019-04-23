@@ -1,5 +1,5 @@
 /*
- * ESP8266 WiFi station implementation.
+ * ESP32 WiFi station implementation.
  * 
  * @author Michel Megens
  * @email  dev@bietje.net
@@ -7,50 +7,63 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
-#include <esp8266.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <lwiot.h>
 
-#include <lwiot/lwiot.h>
+#include <lwip/ip_addr.h>
+#include <lwiot/log.h>
 #include <lwiot/network/wifistation.h>
+#include <lwiot/types.h>
 
-#include <espressif/esp_common.h>
+#include <lwip/err.h>
+#include <esp_err.h>
+#include <esp_wifi.h>
+#include <lwip/dns.h>
+
+extern "C" {
+	extern void esp8266_wifi_subsys_init(void);
+	extern void esp8266_wifi_init_softap(const char *ssid, const char *pass, int max, uint8_t hidden, int channel);
+	extern void esp8266_wifi_init_station(const char *ssid, const char *pass);
+}
+
+extern "C" void esp8266_wifi_station_event(system_event_t *event)
+{
+	auto& station = lwiot::WifiStation::instance();
+	auto addr = lwiot::IPAddress((uint32_t)0);
+
+	switch((int)event->event_id) {
+		case SYSTEM_EVENT_STA_GOT_IP:
+			addr = lwiot::IPAddress((uint32_t)event->event_info.got_ip.ip_info.ip.addr);
+			station.setStatus(WL_CONNECTED);
+			station.setAddress(addr);
+			break;
+
+		case SYSTEM_EVENT_STA_DISCONNECTED:
+			station.setStatus(WL_DISCONNECTED);
+			station.setAddress(addr);
+			break;
+
+		default:
+			break;
+	}
+}
 
 namespace lwiot
 {
 	WifiStation::WifiStation() : addr((uint32_t)0), ssid(""), password(""), _status(WL_IDLE_STATUS)
 	{
+		esp8266_wifi_subsys_init();
 	}
 
 	void WifiStation::connectTo(const String& ssid)
 	{
-		this->connectTo(ssid, "");
+		esp8266_wifi_init_station(ssid.c_str(), "");
 	}
 
 	void WifiStation::connectTo(const String& ssid, const String& pass)
 	{
-		struct sdk_station_config wificonfig;
-
-		auto mode = sdk_wifi_get_opmode();
-
-		if(mode == SOFTAP_MODE)
-			sdk_wifi_set_opmode(STATIONAP_MODE);
-		else if(mode != STATIONAP_MODE)
-			sdk_wifi_set_opmode(STATION_MODE);
-
-		strcpy((char*)wificonfig.ssid, ssid.c_str());
-		if(pass.length() == 0)
-			wificonfig.password[0] = '\0';
-		else
-			strcpy((char*)wificonfig.password, pass.c_str());
-		sdk_wifi_station_set_config(&wificonfig);
-
-		if(sdk_wifi_station_connect()) {
-			this->_status = WL_CONNECTED;
-			this->password = pass;
-			this->ssid = ssid;
-		} else {
-			this->_status = WL_CONNECT_FAILED;
-		}
+		esp8266_wifi_init_station(ssid.c_str(), pass.c_str());
 	}
 
 	void WifiStation::setAddress(const IPAddress& addr)

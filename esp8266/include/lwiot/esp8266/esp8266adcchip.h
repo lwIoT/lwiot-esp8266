@@ -10,6 +10,8 @@
 #include <lwiot/lwiot.h>
 #include <lwiot/io/adcchip.h>
 
+#include <driver/adc.h>
+
 #ifdef CXX
 namespace lwiot { namespace esp8266
 {

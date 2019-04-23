@@ -13,3 +13,6 @@
 [submodule "lwiot-core"]
 	path = lwiot-core
 	url = https://github.com/lwIoT/lwiot-core.git
+[submodule "external/esp8266-idf"]
+	path = external/esp8266-idf
+	url = https://github.com/lwIoT/ESP8266_RTOS_SDK.git

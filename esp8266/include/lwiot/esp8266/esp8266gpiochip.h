@@ -7,11 +7,10 @@
 
 #pragma once
 
-#include <esp8266.h>
 #include <lwiot.h>
 #include <lwiot/io/gpiochip.h>
 
-#include <esp/gpio.h>
+#include <driver/gpio.h>
 
 #ifdef PINS
 #undef PINS
@@ -38,7 +37,7 @@ namespace lwiot { namespace esp8266
 	private:
 		void mode16(const PinMode& mode);
 		void setPullup(int pin, bool enabled);
-		gpio_inttype_t mapIrqEdge(const IrqEdge& edge) const;
+		gpio_int_type_t mapIrqEdge(const IrqEdge& edge) const;
 	};
 }
 }
