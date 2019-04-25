@@ -2,7 +2,6 @@
 # Check whether the required types are available or not
 #
 
-if( NOT AVR )
 SET(CMAKE_REQUIRED_INCLUDES ${PORT_INCLUDE_DIR})
 SET(CMAKE_EXTRA_INCLUDE_FILES FreeRTOS.h task.h queue.h semphr.h timers.h)
 CHECK_INCLUDE_FILES (stdbool.h  HAVE_STDBOOL_H)
@@ -66,10 +65,3 @@ CHECK_C_SOURCE_COMPILES (
         return 0;
     }
   " HAVE_TASKHANDLE_T)
-else()
-	SET(HAVE_TICKTYPE_T True)
-	SET(HAVE_QUEUEHANDLE_T True)
-	SET(HAVE_SEMAPHOREHANDLE_T True)
-	SET(HAVE_TIMERHANDLE_T True)
-	SET(HAVE_TASKHANDLE_T True)
-endif()

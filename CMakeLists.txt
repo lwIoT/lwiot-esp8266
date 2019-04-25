@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(lwiot-esp8266)
+project(lwiot-esp8266 C CXX ASM)
 
 include(CMakeToolsHelpers OPTIONAL)
 include(CheckIncludeFiles)
@@ -58,5 +58,6 @@ CHECK_C_SOURCE_COMPILES (
     }
   " HAVE_SIZE_T)
 
+include(${PROJECT_SOURCE_DIR}/cmake/freertos-type-check.cmake)
 add_subdirectory(lwiot-core)
 add_subdirectory(esp8266)
