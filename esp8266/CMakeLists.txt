@@ -12,6 +12,7 @@ SET(PORT_SOURCE_FILES
 
 	${PROJECT_SOURCE_DIR}/esp8266/soc/wifi.c
 	${PROJECT_SOURCE_DIR}/esp8266/soc/esp8266.c
+	${PROJECT_SOURCE_DIR}/esp8266/soc/i2chal.c
 	${PROJECT_SOURCE_DIR}/lwip/lwip.c
 	${PROJECT_SOURCE_DIR}/mbedtls/mbedtls.c
 	${FREERTOS_SOURCE_FILES}
