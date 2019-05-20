@@ -25,20 +25,21 @@
 
 #include <lwiot/esp8266/esp8266adcchip.h>
 #include <lwiot/esp8266/esp8266watchdog.h>
+#include <lwiot/esp8266/esp8266_ap.h>
 
 class App : public lwiot::Functor {
 protected:
 
 	void startAP(const lwiot::String& ssid, const lwiot::String& passw)
 	{
-		auto& ap = lwiot::WifiAccessPoint::instance();
+		auto& ap = lwiot::esp8266::WifiAccessPoint::instance();
 		lwiot::IPAddress local(192, 168, 1, 1);
 		lwiot::IPAddress subnet(255, 255, 255, 0);
 		lwiot::IPAddress gw(192, 168, 1, 1);
 
 		ap.start();
 		ap.config(local, gw, subnet);
-		ap.begin(ssid, passw, 4);
+		ap.begin(ssid, passw, 4, false, 4);
 	}
 
 	void run() override
