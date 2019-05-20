@@ -13,8 +13,10 @@
 
 #include <lwip/ip_addr.h>
 #include <lwiot/log.h>
-#include <lwiot/network/wifistation.h>
 #include <lwiot/types.h>
+
+#include <lwiot/network/wifistation.h>
+#include <lwiot/esp8266/esp8266_sta.h>
 
 #include <lwip/err.h>
 #include <esp_err.h>
@@ -29,18 +31,18 @@ extern "C" {
 
 extern "C" void esp8266_wifi_station_event(system_event_t *event)
 {
-	auto& station = lwiot::WifiStation::instance();
+	auto& station = lwiot::esp8266::WifiStation::instance();
 	auto addr = lwiot::IPAddress((uint32_t)0);
 
 	switch((int)event->event_id) {
 		case SYSTEM_EVENT_STA_GOT_IP:
 			addr = lwiot::IPAddress((uint32_t)event->event_info.got_ip.ip_info.ip.addr);
-			station.setStatus(WL_CONNECTED);
+			station.setStatus(lwiot::WL_CONNECTED);
 			station.setAddress(addr);
 			break;
 
 		case SYSTEM_EVENT_STA_DISCONNECTED:
-			station.setStatus(WL_DISCONNECTED);
+			station.setStatus(lwiot::WL_DISCONNECTED);
 			station.setAddress(addr);
 			break;
 
@@ -51,43 +53,37 @@ extern "C" void esp8266_wifi_station_event(system_event_t *event)
 
 namespace lwiot
 {
-	WifiStation::WifiStation() : addr((uint32_t)0), ssid(""), password(""), _status(WL_IDLE_STATUS)
+	namespace esp8266
 	{
-		esp8266_wifi_subsys_init();
-	}
+		WifiStation::WifiStation() : lwiot::WifiStation()
+		{
+			esp8266_wifi_subsys_init();
+		}
 
-	void WifiStation::connectTo(const String& ssid)
-	{
-		esp8266_wifi_init_station(ssid.c_str(), "");
-	}
+		void WifiStation::connectTo(const String &ssid)
+		{
+			esp8266_wifi_init_station(ssid.c_str(), "");
+		}
 
-	void WifiStation::connectTo(const String& ssid, const String& pass)
-	{
-		esp8266_wifi_init_station(ssid.c_str(), pass.c_str());
-	}
+		void WifiStation::connectTo(const String &ssid, const String &pass)
+		{
+			esp8266_wifi_init_station(ssid.c_str(), pass.c_str());
+		}
 
-	void WifiStation::setAddress(const IPAddress& addr)
-	{
-		this->addr = addr;
-	}
+		void WifiStation::disconnect()
+		{
+			wifi_mode_t mode;
 
-	void WifiStation::setStatus(wireless_status_t status)
-	{
-		this->_status = status;
-	}
+			esp_wifi_get_mode(&mode);
+			if(mode == WIFI_MODE_APSTA)
+				esp_wifi_set_mode(WIFI_MODE_AP);
+			else
+				esp_wifi_set_mode(WIFI_MODE_NULL);
+		}
 
-	WifiStation::operator bool() const
-	{
-		return this->_status == WL_CONNECTED;
-	}
-
-	wireless_status_t WifiStation::status() const
-	{
-		return this->_status;
-	}
-
-	const IPAddress& WifiStation::address() const
-	{
-		return this->addr;
+		WifiStation::operator bool() const
+		{
+			return this->_status == WL_CONNECTED;
+		}
 	}
 }
