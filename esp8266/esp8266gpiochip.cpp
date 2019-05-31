@@ -43,6 +43,9 @@ static void IRAM_ATTR gpio_external_isr(void *arg)
 	auto pin = int(log2(bits & -bits) + 1);
 	irq_handler_t handler = gpio_isr_handlers[pin];
 
+	if(handler == nullptr)
+		return;
+
 	handler();
 }
 
@@ -133,6 +136,23 @@ namespace lwiot { namespace esp8266
 
 		gpio_isr_handlers[pin] = handler;
 		gpio_isr_handler_add(static_cast<gpio_num_t>(pin), gpio_external_isr, config);
+	}
+
+	void GpioChip::detachIrqHandler(int pin)
+	{
+		gpio_config_t *config = &configs[pin];
+
+		config->mode = GPIO_MODE_INPUT;
+		config->pin_bit_mask = 1UL << pin;
+		config->pull_down_en = GPIO_PULLDOWN_DISABLE;
+		config->pull_up_en = GPIO_PULLUP_DISABLE;
+		config->intr_type = this->mapIrqEdge(IrqNone);
+		gpio_config(config);
+
+		enter_critical();
+		gpio_isr_handlers[pin] = nullptr;
+		gpio_isr_handler_remove(static_cast<gpio_num_t>(pin));
+		exit_critical();
 	}
 
 	gpio_int_type_t GpioChip::mapIrqEdge(const lwiot::IrqEdge &edge) const
