@@ -26,6 +26,8 @@
 #include <lwiot/util/datetime.h>
 #include <lwiot/util/application.h>
 
+#include <lwiot/esp8266/hardwarei2calgorithm.h>
+
 #include <lwiot/stl/vector.h>
 #include <lwiot/stl/string.h>
 
@@ -33,8 +35,8 @@ class App : public lwiot::Functor {
 protected:
 	void run() override
 	{
-		lwiot::GpioPin scl(5), sda(4);
-		auto algo = new lwiot::HardwareI2CAlgorithm(scl, sda, 400000);
+		lwiot::GpioPin scl(2), sda(14);
+		auto algo = new lwiot::esp8266::HardwareI2CAlgorithm(scl, sda, 400000);
 		//auto algo = new lwiot::GpioI2CAlgorithm(sda, scl, 100000);
 		lwiot::I2CBus bus(algo);
 
