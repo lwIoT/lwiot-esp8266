@@ -46,7 +46,7 @@ protected:
 	{
 		lwiot_sleep(1000);
 		print_dbg("Creating AP...\n");
-		this->startAP("esp8266", "testAP1234");
+		this->startAP("lwIoT test", "lwiot-test");
 
 		while(true) {
 			printf("[%li] PING!\n", lwiot_tick_ms());
