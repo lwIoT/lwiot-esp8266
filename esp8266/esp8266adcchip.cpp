@@ -22,8 +22,12 @@ namespace lwiot { namespace esp8266
 
 	size_t AdcChip::read(int pin) const
 	{
+		uint16_t data;
 		UNUSED(pin);
-		return adc_read();
+
+		data = 0;
+		adc_read(&data);
+		return data;
 	}
 
 	void AdcChip::begin()
